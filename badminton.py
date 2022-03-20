@@ -1,7 +1,47 @@
 #!/usr/bin/env python
 # coding: utf-8
+# 2022.03.20
 
 from playwright.sync_api import sync_playwright
+from datetime import datetime, timedelta
+from apscheduler.schedulers.blocking import BlockingScheduler
+
+''' Use template
+instance_info = Class_info()
+instance_info.list1d_login = ['<学号>', '<密码>']
+instance_info.list2d_jieyongren = [
+    ['张三','<手机号>'],
+    ["李四",'<手机号>'],
+    ]
+# 使用日期
+instance_info.str_date = '2022,3,26'
+# 使用时间列表
+instance_info.list1d_time = [ 21, 15 ]
+instance_info.list1d_shiyongren = [ '王五' ]
+# 默认直接提交，可选择不提交只保存
+# instance_info.str_suborsave = '保存'
+# 默认隔日凌晨 00:00:05 启动程序，可自定义启动时间，格式参见 apscheduler
+# instance_info.dt_applytime = datetime.now() + timedelta(seconds=3)
+
+def_timer( instance_info )
+'''
+
+def def_timer( Class_info ):
+    scheduler = BlockingScheduler()
+    scheduler.add_job(
+        def_main,
+        trigger = 'date',
+        run_date = Class_info.dt_applytime,
+        args = [ Class_info ]
+        )
+    def_printinfo( Class_info )
+    scheduler.start()    
+
+def def_printinfo( Class_info ):
+    print('启动时间:', Class_info.dt_applytime)
+    print('使用日期: '+Class_info.str_date)
+    print('使用时间:', Class_info.list1d_time)
+    print('申请方式: '+Class_info.str_suborsave)
 
 def def_main(
         Class_info
@@ -9,11 +49,9 @@ def def_main(
     with sync_playwright() as playwright:
         browser, context = def_login( Class_info, playwright )
         for str_time in Class_info.list1d_time:
+            print(str_time)
             Class_info.str_time = str_time
-            def_sub(
-                context,
-                Class_info,
-                )
+            def_sub( context, Class_info )
         input("Press Enter to continue.")
         context.close()
         browser.close()
@@ -40,29 +78,27 @@ def def_sub(
     frame1.locator('[onclick="day_Click('+Class_info.str_date+');"]').click()
     # 使用时间
     frame0.click('button#field31902_browserbtn')
-    page.wait_for_load_state("networkidle")
     frame2 = page.frame_locator('iframe[src="/systeminfo/BrowserMain.jsp?url=/interface/CommonBrowser.jsp?type=browser.sysjd|31902"]').frame_locator('iframe[name="main"]')
-    print('td:has-text("'+Class_info.str_time+'")')
+    frame2.locator('input[name="con31860_value"]').fill(Class_info.str_time)
+    frame2.locator('input[id="btnsearch"]').click()
     frame2.locator('td:has-text("'+Class_info.str_time+'")').click()
     # 使用场地
     frame0.click('button#field31883_browserbtn')
     page.wait_for_load_state("networkidle")
     frame3 = page.frame(name="tabcontentframe")
     # 场馆使用情况表
-    ico1 = frame3.locator("#CustomTree_1_ico")
-    button1 = ico1.get_attribute('class')
-    if (button1 == 'button ico_close' ):
-        ico1.click()
     # 体育馆
-    ico2 = frame3.locator("#CustomTree_2_ico")
-    button2 = ico2.get_attribute('class')
-    if (button2 == 'button ico_close' ):
-        ico2.click()
     # 室内羽毛球场
-    ico3 = frame3.locator("#CustomTree_3_ico")
-    button3 = ico3.get_attribute('class')
-    if (button3 == 'button ico_close' ):
-        ico3.click()
+    for int_i in range(3):
+        ico = frame3.locator("#CustomTree_"+str(int_i+1)+"_ico")
+        button = ico.get_attribute('class')
+        if (button == 'button ico_close' ):
+            ico.click()
+        elif ( button == 'button ico_open' ):
+            pass
+        elif ( button == 'button ico_docu' ):
+            print('此时间段申请人已满！')
+            return
     # 羽毛球场地1号
     frame3.locator("#CustomTree_4_check").click()
     frame3.locator("text=确定").click()
@@ -79,13 +115,12 @@ def def_sub(
     # 使用人员名单
     frame0.locator("#field31896").fill(Class_info.str_shiyongren)
     # 提交
-    frame0.locator("text=提交").click()
-    page.wait_for_load_state("networkidle")
-    page.pause()
+    frame0.locator('input[value="'+Class_info.str_suborsave+'"]').click()
+
 def def_login( Class_info, playwright ):
    
-    #browser = playwright.chromium.launch(headless=False, devtools=True)                       
-    browser = playwright.chromium.launch(headless=False)
+    #browser = playwright.chromium.launch(headless=False, devtools=True)
+    browser = playwright.chromium.launch()
     # load brower cookies                                                                    
     context = browser.new_context(storage_state="state.json")
     page = context.new_page()
@@ -100,9 +135,25 @@ def def_login( Class_info, playwright ):
         page.wait_for_load_state("networkidle")
         context.storage_state(path="state.json")
     return browser, context
+
 class Class_info():
     def __init__(self):
+        self._str_suborsave = '提交'
+        
+        dt_applytime = datetime.now()
+        dt_applytime += timedelta(days=1)
+        dt_applytime = dt_applytime.replace( hour=0, minute=0, second=5 )
+        self._dt_applytime = dt_applytime
+
         pass
+
+    @property
+    def dt_applytime(self):
+        return self._dt_applytime
+    @dt_applytime.setter
+    def dt_applytime(self, tmp):
+        self._dt_applytime = tmp
+
     @property
     def list1d_login(self):
         return self._list1d_login
@@ -118,13 +169,10 @@ class Class_info():
         self._list2d_jieyongren = tmp
         self._list1d_zerenren = self._list2d_jieyongren [0]
         self._list1d_shiyongren = []
-        print(self._list2d_jieyongren)
         self._str_shiyongren = ''
         for list1d_tmp in self._list2d_jieyongren:
-            print(list1d_tmp)
             self._list1d_shiyongren.append( list1d_tmp[0] )
             self._str_shiyongren += list1d_tmp[0] + '\n'
-        print(self._list1d_shiyongren)
         self._str_renshu = str(len(self._list1d_shiyongren))
 
     @property
@@ -147,7 +195,9 @@ class Class_info():
         return self._list1d_time
     @list1d_time.setter
     def list1d_time(self, tmp):
-        self._list1d_time = tmp
+        self._list1d_time = []
+        for int_i in tmp:
+            self._list1d_time.append( str(int_i)+':00-'+str(int_i+1)+':00' )
 
     @property
     def str_time(self):
@@ -169,11 +219,13 @@ class Class_info():
     @property
     def str_shiyongren(self):
         return self._str_shiyongren
-'''
+    
     @property
-    def (self):
-        return self._
-    @.setter
-    def (self, tmp):
-        self._ = tmp
-'''
+    def str_suborsave(self):
+        return self._str_suborsave
+    @str_suborsave.setter
+    def str_suborsave(self, tmp):
+        if (tmp not in ['提交','保存']):
+            raise
+        self._str_suborsave = tmp
+
