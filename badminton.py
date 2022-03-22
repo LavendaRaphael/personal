@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-# 2022.03.20
+# 2022.03.22
 
 from playwright.sync_api import sync_playwright
 from datetime import datetime, timedelta
@@ -72,20 +72,18 @@ def def_sub(
     # 场馆类型
     frame0.select_option('select#field32340',"4")
     # 使用日期
-    frame0.click('button#field31901browser')
-    frame0.frame_locator('[id="_my97DP"] iframe')
+    frame0.locator('button#field31901browser').click()
     frame1 = frame0.frame_locator('[id="_my97DP"] iframe')
     frame1.locator('[onclick="day_Click('+Class_info.str_date+');"]').click()
     # 使用时间
-    frame0.click('button#field31902_browserbtn')
+    frame0.locator('button#field31902_browserbtn').click()
     frame2 = page.frame_locator('iframe[src="/systeminfo/BrowserMain.jsp?url=/interface/CommonBrowser.jsp?type=browser.sysjd|31902"]').frame_locator('iframe[name="main"]')
     frame2.locator('input[name="con31860_value"]').fill(Class_info.str_time)
     frame2.locator('input[id="btnsearch"]').click()
     frame2.locator('td:has-text("'+Class_info.str_time+'")').click()
     # 使用场地
     frame0.click('button#field31883_browserbtn')
-    page.wait_for_load_state("networkidle")
-    frame3 = page.frame(name="tabcontentframe")
+    frame3 = page.frame_locator('iframe[src="/systeminfo/BrowserMain.jsp?url=/formmode/tree/treebrowser/CustomTreeBrowser.jsp%3Fderecorderindex%3D%26type%3D63_256_256%26selectedids%3D"]').frame_locator('iframe[id="main"]').frame_locator('iframe[id="tabcontentframe"]')
     # 场馆使用情况表
     # 体育馆
     # 室内羽毛球场
@@ -116,23 +114,25 @@ def def_sub(
     frame0.locator("#field31896").fill(Class_info.str_shiyongren)
     # 提交
     frame0.locator('input[value="'+Class_info.str_suborsave+'"]').click()
+    print(datetime.now())
 
 def def_login( Class_info, playwright ):
    
-    #browser = playwright.chromium.launch(headless=False, devtools=True)
-    browser = playwright.chromium.launch()
+    browser = playwright.chromium.launch(headless=False)
+    #browser = playwright.chromium.launch()
     # load brower cookies                                                                    
     context = browser.new_context(storage_state="state.json")
+    #context = browser.new_context()
     page = context.new_page()
-    # badminton workflow url
     page.goto("https://ids.shanghaitech.edu.cn/authserver/login")
-    # login                                                                                  
-    page.wait_for_load_state("networkidle")
+    page.locator('text=上海科技大学').wait_for()
+    # login
     if ( 'login' in page.url ):
+        print("重新存储 cookies")
         page.locator("[placeholder=\"Username\"]").fill(Class_info.list1d_login[0])
         page.locator("[placeholder=\"Password\"]").fill(Class_info.list1d_login[1])
         page.locator("button:has-text(\"Sign in\")").click()
-        page.wait_for_load_state("networkidle")
+        page.locator('img[src="/authserver/custom/images/login-logo.png"]').wait_for()
         context.storage_state(path="state.json")
     return browser, context
 
@@ -144,8 +144,6 @@ class Class_info():
         dt_applytime += timedelta(days=1)
         dt_applytime = dt_applytime.replace( hour=0, minute=0, second=5 )
         self._dt_applytime = dt_applytime
-
-        pass
 
     @property
     def dt_applytime(self):
