@@ -20,7 +20,7 @@ instance_info.list1d_time = [ 21, 15 ]
 instance_info.list1d_shiyongren = [ '王五' ]
 # 默认直接提交，可选择不提交只保存
 # instance_info.str_suborsave = '保存'
-# 默认隔日凌晨 00:00:05 启动程序，可自定义启动时间，格式参见 apscheduler
+# 默认隔日凌晨 00:00:01 启动程序，可自定义启动时间，格式参见 apscheduler
 # instance_info.dt_applytime = datetime.now() + timedelta(seconds=3)
 
 def_timer( instance_info )
@@ -142,7 +142,7 @@ class Class_info():
         
         dt_applytime = datetime.now()
         dt_applytime += timedelta(days=1)
-        dt_applytime = dt_applytime.replace( hour=0, minute=0, second=5 )
+        dt_applytime = dt_applytime.replace( hour=0, minute=0, second=1 )
         self._dt_applytime = dt_applytime
 
     @property
