@@ -3,8 +3,9 @@
 # 2022.05.07
 
 from playwright.sync_api import sync_playwright
-from datetime import datetime, timedelta
+from datetime import datetime
 from apscheduler.schedulers.blocking import BlockingScheduler
+import os
 
 ''' Use template
 instance_info = Class_info()
@@ -18,7 +19,7 @@ def def_timer( Class_info ):
     scheduler.add_job(
         def_main,
         trigger = 'interval',
-        hours = 2,
+        minutes = 1,
         args = [ Class_info ]
         )
     scheduler.start()    
@@ -36,19 +37,22 @@ def def_login( Class_info, playwright ):
     #browser = playwright.chromium.launch(headless=False)
     browser = playwright.chromium.launch()
     # load brower cookies 
-    context = browser.new_context(storage_state="state.json")
-    #context = browser.new_context()
+    if os.path.isfile("shtulogin.json"):
+        context = browser.new_context(storage_state="shtulogin.json")
+    else:
+        context = browser.new_context()
     page = context.new_page()
-    page.goto("http://controller.shanghaitech.edu.cn:8080/portal")
+    page.goto("http://controller.shanghaitech.edu.cn:8080/portal", wait_until="networkidle")
     page.locator('img[src="logo.png"]').wait_for()
     # login
+    print(datetime.now())
     if ('auth.jsp' in page.url):
-        print('重新保存cookies')
+        print('重新登陆')
         page.locator('input[id="username"]').fill(Class_info.list1d_login[0])
         page.locator('input[id="_password"]').fill(Class_info.list1d_login[1])
         page.locator('input[id="loginBtn"]').click()
         page.locator('text=Congratulations!').wait_for()
-        context.storage_state(path="state.json")
+        context.storage_state(path="shtulogin.json")
     return browser, context
 
 class Class_info():
