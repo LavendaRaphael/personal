@@ -19,7 +19,7 @@ def def_timer( Class_info ):
     scheduler.add_job(
         def_main,
         trigger = 'interval',
-        minutes = 1,
+        hours = 1,
         args = [ Class_info ]
         )
     scheduler.start()    
