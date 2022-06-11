@@ -11,7 +11,7 @@ for int_year in range(2014,2023):
                 str_read = f'{int_year}{int_month:0>2d}{int_day:0>2d}.txt'
                 print(str_read)
                 if os.path.isfile(str_read):
-                    str_txt += open( str_read, 'r' ).read() + '\n'
+                    str_txt += open( str_read, 'r' ).read() + '\n\n'
             str_write = f'{int_year}{int_month:0>2d}.tex'
             os.chdir('..')
             print(str_write)
