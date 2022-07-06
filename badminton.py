@@ -9,10 +9,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 ''' Use template
 instance_info = Class_info()
 instance_info.list1d_login = ['<学号>', '<密码>']
-instance_info.list2d_jieyongren = [
-    ['张三','<手机号>'],
-    ["李四",'<手机号>'],
-    ]
+instance_info.list1d_zerenren = ['张三','<手机号>']
 # 使用日期
 instance_info.str_date = '2022,3,26'
 # 使用时间列表
@@ -63,12 +60,13 @@ def def_sub(
     page = context.new_page()
     # badminton workflow url
     page.goto("https://oa.shanghaitech.edu.cn/workflow/request/AddRequest.jsp?workflowid=14862")
-    page.frame_locator('iframe[name="bodyiframe"]').locator("#field31898_0").wait_for()
+    page.frame_locator('iframe[name="bodyiframe"]').locator("select#field32340").wait_for()
     frame0 = page.frame("bodyiframe")
-    frame0.locator("#field31898_0").fill(Class_info.list2d_jieyongren[0][0])
-    frame0.locator("#field31899_0").fill(Class_info.list2d_jieyongren[0][1])
-    frame0.locator("#field31898_1").fill(Class_info.list2d_jieyongren[1][0])
-    frame0.locator("#field31899_1").fill(Class_info.list2d_jieyongren[1][1])
+    # 借用人
+    #frame0.locator("#field31898_0").fill(Class_info.list1d_zerenren[0][0])
+    #frame0.locator("#field31899_0").fill(Class_info.list1d_zerenren[0][1])
+    #frame0.locator("#field31898_1").fill(Class_info.list1d_zerenren[1][0])
+    #frame0.locator("#field31899_1").fill(Class_info.list1d_zerenren[1][1])
     # 场馆类型
     frame0.select_option('select#field32340',"4")
     # 使用日期
@@ -160,22 +158,11 @@ class Class_info():
         self._list1d_login = tmp
 
     @property
-    def list2d_jieyongren(self):
-        return self._list2d_jieyongren
-    @list2d_jieyongren.setter
-    def list2d_jieyongren(self, tmp):
-        self._list2d_jieyongren = tmp
-        self._list1d_zerenren = self._list2d_jieyongren [0]
-        self._list1d_shiyongren = []
-        self._str_shiyongren = ''
-        for list1d_tmp in self._list2d_jieyongren:
-            self._list1d_shiyongren.append( list1d_tmp[0] )
-            self._str_shiyongren += list1d_tmp[0] + '\n'
-        self._str_renshu = str(len(self._list1d_shiyongren))
-
-    @property
     def list1d_zerenren(self):
         return self._list1d_zerenren
+    @list1d_zerenren.setter
+    def list1d_zerenren(self, tmp):
+        self._list1d_zerenren = tmp
 
     @property
     def str_renshu(self):
@@ -209,9 +196,8 @@ class Class_info():
         return self._list1d_shiyongren
     @list1d_shiyongren.setter
     def list1d_shiyongren(self, tmp):
-        self._list1d_shiyongren.extend( tmp )
-        for str_tmp in tmp:
-            self._str_shiyongren += str_tmp + '\n'
+        self._list1d_shiyongren = tmp
+        self._str_shiyongren = '\n'.join( tmp )
         self._str_renshu = str(len(self._list1d_shiyongren))
 
     @property
