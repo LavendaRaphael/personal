@@ -94,6 +94,7 @@ def def_sub(
             pass
         elif ( button == 'button ico_docu' ):
             print('此时间段申请人已满！')
+            print(datetime.now())
             return
     # 羽毛球场地1号
     frame3.locator("#CustomTree_4_check").click()
